@@ -275,6 +275,20 @@ class SettingsPage(ctk.CTkFrame):
         self.duration_slider.set(duration_val)
         self.duration_slider.grid(row=3, column=1, padx=20, pady=(2, 15), sticky="ew")
         
+        # Strict interview question filter toggle
+        self.strict_filter_switch = ctk.CTkSwitch(
+            self.vad_card,
+            text="คัดกรองเฉพาะคำถามสัมภาษณ์งานจริง (Strict Interview Filter)",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            command=self._on_strict_filter_changed
+        )
+        saved_strict = self.config_manager.get("strict_filter", True)
+        if saved_strict:
+            self.strict_filter_switch.select()
+        else:
+            self.strict_filter_switch.deselect()
+        self.strict_filter_switch.grid(row=4, column=0, columnspan=2, sticky="w", padx=20, pady=(15, 20))
+        
     # =====================================================================
     # EVENT HANDLERS
     # =====================================================================
@@ -299,11 +313,13 @@ class SettingsPage(ctk.CTkFrame):
         custom_base_url = self.custom_base_url_entry.get().strip()
         custom_key = self.custom_api_key_entry.get().strip()
         custom_model = self.custom_model_entry.get().strip()
+        strict_filter = bool(self.strict_filter_switch.get())
         
         self.config_manager.set("gemini_api_key", gemini_key)
         self.config_manager.set("custom_base_url", custom_base_url)
         self.config_manager.set("custom_api_key", custom_key)
         self.config_manager.set("custom_model", custom_model)
+        self.config_manager.set("strict_filter", strict_filter)
         
         # Sync to analyzer
         provider = self.config_manager.get("ai_provider", "gemini")
@@ -314,9 +330,14 @@ class SettingsPage(ctk.CTkFrame):
             model_name=gemini_model,
             custom_api_key=custom_key,
             custom_base_url=custom_base_url,
-            custom_model=custom_model
+            custom_model=custom_model,
+            strict_filter=strict_filter
         )
         print("[Settings Log] AI settings saved and synced to analyzer.")
+
+    def _on_strict_filter_changed(self):
+        self._save_settings()
+        print(f"[Settings Log] Strict interview filter toggled to {self.strict_filter_switch.get()}")
 
     def _on_test_api_key(self):
         # Save all settings first to ensure config and analyzer have the latest values

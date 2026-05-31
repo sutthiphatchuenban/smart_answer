@@ -11,6 +11,7 @@
     "custom_api_key": "",
     "custom_base_url": "",
     "custom_model": "",
+    "strict_filter": true,
     "noise_reduction_enabled": true,
     "history": []
 }

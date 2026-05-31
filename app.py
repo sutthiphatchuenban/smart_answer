@@ -74,7 +74,8 @@ class SmartAnswerApp(ctk.CTk):
             provider=self.config_manager.get("ai_provider", "gemini"),
             custom_api_key=self.config_manager.get("custom_api_key", ""),
             custom_base_url=self.config_manager.get("custom_base_url", ""),
-            custom_model=self.config_manager.get("custom_model", "")
+            custom_model=self.config_manager.get("custom_model", ""),
+            strict_filter=self.config_manager.get("strict_filter", True)
         )
         
         # App-level state

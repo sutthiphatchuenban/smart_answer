@@ -16,6 +16,7 @@ DEFAULT_CONFIG = {
     "custom_api_key": "",
     "custom_base_url": "",
     "custom_model": "",
+    "strict_filter": True,
     "noise_reduction_enabled": True,
     "history": []
 }

@@ -30,13 +30,15 @@ class InterviewAnalysis(BaseModel):
 
 class GeminiAnalyzer:
     def __init__(self, api_key="", model_name="gemini-3.1-flash-lite", 
-                 provider="gemini", custom_api_key="", custom_base_url="", custom_model=""):
+                 provider="gemini", custom_api_key="", custom_base_url="", custom_model="",
+                 strict_filter=True):
         self.provider = provider
         self.api_key = api_key
         self.model_name = model_name
         self.custom_api_key = custom_api_key
         self.custom_base_url = custom_base_url
         self.custom_model = custom_model
+        self.strict_filter = strict_filter
         
         self.client = None
         if api_key and provider == "gemini":
@@ -57,13 +59,14 @@ class GeminiAnalyzer:
         self.model_name = model_name
         print(f"Gemini Analyzer model updated to: {model_name}")
 
-    def update_provider_config(self, provider, api_key, model_name, custom_api_key, custom_base_url, custom_model):
+    def update_provider_config(self, provider, api_key, model_name, custom_api_key, custom_base_url, custom_model, strict_filter=True):
         self.provider = provider
         self.api_key = api_key
         self.model_name = model_name
         self.custom_api_key = custom_api_key
         self.custom_base_url = custom_base_url
         self.custom_model = custom_model
+        self.strict_filter = strict_filter
         if provider == "gemini":
             self._init_client()
 
@@ -216,6 +219,18 @@ class GeminiAnalyzer:
             if status_callback:
                 status_callback("กำลังวิเคราะห์คำถามด้วย Gemini...")
 
+            # Define VAD strict/loose filter behavior dynamically
+            if self.strict_filter:
+                filter_instruction = """
+                - Set `is_interview_question = true` ONLY if it is strictly a job interview question or topic (technical, soft-skill, behavioral, background, scenario-based, salary, etc.).
+                - If it is a general knowledge question (e.g. "ประเทศไทยมีกี่จังหวัด"), casual greeting ("สวัสดีครับ"), sound test ("ฮัลโหล ได้ยินมั้ย"), simple acknowledgement ("โอเคครับ"), or general chit-chat, you MUST set `is_interview_question = false` and leave all other fields as null/empty.
+                """
+            else:
+                filter_instruction = """
+                - Treat almost all questions, queries, or knowledge checks (including general knowledge like "ประเทศไทยมีกี่จังหวัด", general questions, or brainstorming queries) as interview-relevant, and set `is_interview_question = true`.
+                - ONLY set `is_interview_question = false` if the input is a pure sound test, meaningless noise, or a short greeting (like "hello", "สวัสดีครับ", "เทสๆ") that doesn't contain any actual question or query.
+                """
+
             def worker():
                 try:
                     print(f"[Gemini Log] Sending text to Gemini model '{self.model_name}' for structured analysis: '{question_text}'")
@@ -229,9 +244,8 @@ class GeminiAnalyzer:
                     1. Review the transcribed question text. Correct any transcription errors, spelling mistakes, or grammatical errors.
                        Pay special attention to English technical terms that might be transcribed phonetically in Thai (e.g. "พอลูก" -> "for loop").
                     
-                    2. Check if this text is actually a job interview question or topic (technical, soft-skill, behavioral, background, scenario-based, salary, etc.).
-                       - If it is NOT an interview question (e.g. casual greeting "สวัสดีครับ", sound test "ฮัลโหล ได้ยินมั้ย", simple acknowledgement "โอเคครับ", chit-chat, etc.), you MUST set `is_interview_question = false` and leave all other fields as null/empty.
-                       - If it IS an actual interview question, set `is_interview_question = true` and proceed with the full analysis.
+                    2. Check if this text is a valid question to analyze:
+                       {filter_instruction}
                     
                     3. If `is_interview_question` is true:
                        - In `question_thai`, put the corrected, clear version of the question in Thai (e.g. "การใช้งาน for loop และตัวอย่างการใช้งาน").
@@ -280,6 +294,18 @@ class GeminiAnalyzer:
         if status_callback:
             status_callback("กำลังวิเคราะห์คำถามด้วย Custom AI...")
 
+        # Define VAD strict/loose filter behavior dynamically for Custom AI
+        if self.strict_filter:
+            filter_instruction = """
+            - Set `is_interview_question = true` ONLY if it is strictly a job interview question or topic (technical, soft-skill, behavioral, background, scenario-based, salary, etc.).
+            - If it is a general knowledge question (e.g. "ประเทศไทยมีกี่จังหวัด"), casual greeting ("สวัสดีครับ"), sound test ("ฮัลโหล ได้ยินมั้ย"), simple acknowledgement ("โอเคครับ"), or general chit-chat, you MUST set `is_interview_question = false` and leave all other fields as null/empty.
+            """
+        else:
+            filter_instruction = """
+            - Treat almost all questions, queries, or knowledge checks (including general knowledge like "ประเทศไทยมีกี่จังหวัด", general questions, or brainstorming queries) as interview-relevant, and set `is_interview_question = true`.
+            - ONLY set `is_interview_question = false` if the input is a pure sound test, meaningless noise, or a short greeting (like "hello", "สวัสดีครับ", "เทสๆ") that doesn't contain any actual question or query.
+            """
+
         def worker():
             import requests
             try:
@@ -290,34 +316,33 @@ class GeminiAnalyzer:
                 if self.custom_api_key:
                     headers["Authorization"] = f"Bearer {self.custom_api_key}"
                 
-                system_prompt = """
+                system_prompt = f"""
                 You are a premium career coaching assistant and interview expert.
                 An interviewer just asked a question in a job interview.
                 
                 You MUST return a valid JSON object matching the following structure:
-                {
+                {{
                   "is_interview_question": boolean,
                   "question_thai": string or null,
                   "category": string or null,
                   "focus_areas": [string] or null,
                   "key_points": [string] or null,
-                  "star_framework": {
+                  "star_framework": {{
                     "situation": string or null,
                     "task": string or null,
                     "action": string or null,
                     "result": string or null
-                  } or null,
+                  }} or null,
                   "answer_strategy": string or null,
                   "example_outline": [string] or null,
                   "suggested_answer": string
-                }
+                }}
                 
                 Important Guidelines:
                 1. Review the transcribed question text. Correct any transcription errors, spelling mistakes, or grammatical errors.
                    Pay special attention to English technical terms that might be transcribed phonetically in Thai (e.g. "พอลูก" -> "for loop").
-                2. Check if this text is actually a job interview question or topic (technical, soft-skill, behavioral, background, scenario-based, salary, etc.).
-                   - If it is NOT an interview question (e.g. casual greeting "สวัสดีครับ", sound test "ฮัลโหล ได้ยินมั้ย", simple acknowledgement "โอเคครับ", chit-chat, etc.), you MUST set `is_interview_question = false` and leave all other fields as null/empty.
-                   - If it IS an actual interview question, set `is_interview_question = true` and proceed with the full analysis.
+                2. Check if this text is a valid question to analyze:
+                   {filter_instruction}
                 3. If `is_interview_question` is true:
                    - In `question_thai`, put the corrected, clear version of the question in Thai (e.g. "การใช้งาน for loop และตัวอย่างการใช้งาน").
                    - Provide a complete, high-quality, professional sample answer in Thai (`suggested_answer`) that the candidate can read or say directly. It should be natural, convincing, and demonstrate deep expertise.
