@@ -92,7 +92,7 @@ class NavigationFrame(ctk.CTkFrame):
             justify="left",
             wraplength=180
         )
-        self.status_desc.grid(row=1, column=0, padx=12, pady=(0, 12), sticky="w")
+        self.status_desc.grid(row=1, column=0, padx=(28, 12), pady=(0, 12), sticky="w")
         
         # Select Dashboard by default
         self.select_page("dashboard")

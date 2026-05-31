@@ -122,13 +122,11 @@ class DashboardPage(ctk.CTkFrame):
         
         self.vad_hint = ctk.CTkLabel(
             vad_info_frame,
-            text=" เกร็ดน่ารู้: โหมด Auto-Trigger จะตรวจจับระดับเสียงเพื่อตัดคำถามส่งวิเคราะห์โดยอัตโนมัติเมื่อสิ้นเสียงพูด",
-            image=icons["bulb"],
-            compound="left",
-            font=ctk.CTkFont(size=11, slant="italic"),
-            text_color="#888888",
+            text="โหมดการทำงาน (Listening Mode):\n\n• Auto-Trigger:\nตรวจจับความเงียบและส่งวิเคราะห์คำตอบอัตโนมัติเมื่อพูดจบ (เหมาะกับคนพูดจังหวะปกติ)\n\n• Manual Mode:\nกดปุ่มเริ่ม/หยุดบันทึกเสียงด้วยตนเองเพื่อส่งวิเคราะห์ (เหมาะกับคนพูดช้า/เว้นช่องไฟนาน/เสียงรบกวนเยอะ)",
+            font=ctk.CTkFont(size=11),
+            text_color="#999999",
             justify="left",
-            wraplength=240
+            wraplength=260
         )
         self.vad_hint.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
@@ -139,10 +137,9 @@ class DashboardPage(ctk.CTkFrame):
         self.feed_area.grid_rowconfigure(2, weight=1) # Scrollable Feed takes remaining space
         
         # Status Card (Header)
-        self.header_card = ctk.CTkFrame(self.feed_area, fg_color="#1E1E20", height=65, corner_radius=10)
+        self.header_card = ctk.CTkFrame(self.feed_area, fg_color="#1E1E20", corner_radius=10)
         self.header_card.grid(row=0, column=0, sticky="ew", pady=(0, 10))
         self.header_card.grid_columnconfigure(0, weight=1)
-        self.header_card.grid_propagate(False)
         
         self.status_dot = ctk.CTkLabel(
             self.header_card,
@@ -150,7 +147,7 @@ class DashboardPage(ctk.CTkFrame):
             text_color="#28a745", # Green initially
             font=ctk.CTkFont(size=16)
         )
-        self.status_dot.grid(row=0, column=0, padx=(18, 5), pady=(10, 2), sticky="w")
+        self.status_dot.grid(row=0, column=0, padx=(18, 5), pady=(12, 3), sticky="w")
         
         self.status_title = ctk.CTkLabel(
             self.header_card,
@@ -158,7 +155,7 @@ class DashboardPage(ctk.CTkFrame):
             font=ctk.CTkFont(size=14, weight="bold"),
             text_color="#FFFFFF"
         )
-        self.status_title.grid(row=0, column=0, padx=(35, 10), pady=(10, 2), sticky="w")
+        self.status_title.grid(row=0, column=0, padx=(35, 10), pady=(12, 3), sticky="w")
         
         self.status_desc = ctk.CTkLabel(
             self.header_card,
@@ -166,7 +163,7 @@ class DashboardPage(ctk.CTkFrame):
             text_color="#999999",
             font=ctk.CTkFont(size=11)
         )
-        self.status_desc.grid(row=1, column=0, padx=18, pady=(0, 10), sticky="w")
+        self.status_desc.grid(row=1, column=0, padx=(35, 10), pady=(0, 12), sticky="w")
         
         # Mini Mode Button
         self.mini_btn = ctk.CTkButton(
@@ -181,7 +178,7 @@ class DashboardPage(ctk.CTkFrame):
             font=ctk.CTkFont(size=11, weight="bold"),
             command=self.callbacks.get('toggle_mini_mode')
         )
-        self.mini_btn.grid(row=0, column=0, padx=(0, 15), pady=(15, 0), sticky="ne")
+        self.mini_btn.grid(row=0, column=0, padx=(0, 15), pady=(12, 0), sticky="ne")
         
         # Live Caption Box
         self.live_caption_card = ctk.CTkFrame(self.feed_area, fg_color="#1E1E20", height=95, corner_radius=10, border_width=1, border_color="#333335")
@@ -242,19 +239,33 @@ class DashboardPage(ctk.CTkFrame):
         if enabled:
             self.control_panel.grid_remove()
             self.header_card.grid_remove()
-            self.feed_scroll.grid_remove()
             
-            # Reposition and expand caption card to fill the window
+            # Configure feed_area grid weights for mini mode
+            self.feed_area.grid_rowconfigure(0, weight=0) # live_caption_card
+            self.feed_area.grid_rowconfigure(1, weight=1) # feed_scroll
+            self.feed_area.grid_rowconfigure(2, weight=0) # empty
+            
+            # Reposition caption card
             self.feed_area.grid_configure(padx=10, pady=10)
-            self.live_caption_card.grid_configure(row=0, pady=0)
-            self.live_caption_card.configure(height=180)
-            self.live_textbox.configure(height=120)
+            self.live_caption_card.grid_configure(row=0, pady=(0, 5))
+            self.live_caption_card.configure(height=90)
+            self.live_textbox.configure(height=45)
+            
+            # Position feed_scroll below the caption card
+            self.feed_scroll.grid(row=1, column=0, sticky="nsew")
             
             # Show restore button
             self.restore_btn.grid(row=0, column=0, padx=15, pady=(8, 2), sticky="e")
         else:
             self.control_panel.grid(row=0, column=0, padx=(15, 10), pady=15, sticky="nsew")
             self.header_card.grid(row=0, column=0, sticky="ew", pady=(0, 10))
+            
+            # Configure feed_area grid weights for normal mode
+            self.feed_area.grid_rowconfigure(0, weight=0) # header_card
+            self.feed_area.grid_rowconfigure(1, weight=0) # live_caption_card
+            self.feed_area.grid_rowconfigure(2, weight=1) # feed_scroll
+            
+            # Restore feed_scroll to row 2
             self.feed_scroll.grid(row=2, column=0, sticky="nsew")
             
             # Restore caption card layout

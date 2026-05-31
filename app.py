@@ -75,7 +75,9 @@ class SmartAnswerApp(ctk.CTk):
             custom_api_key=self.config_manager.get("custom_api_key", ""),
             custom_base_url=self.config_manager.get("custom_base_url", ""),
             custom_model=self.config_manager.get("custom_model", ""),
-            strict_filter=self.config_manager.get("strict_filter", True)
+            strict_filter=self.config_manager.get("strict_filter", True),
+            resume_enabled=self.config_manager.get("resume_enabled", False),
+            resume_text=self.config_manager.get("resume_text", "")
         )
         
         # App-level state
@@ -224,14 +226,16 @@ class SmartAnswerApp(ctk.CTk):
                 pass
             
             # Change window settings
-            self.resizable(False, False) # Disable resizing during mini mode
-            self.geometry("470x200") # Set small size
+            self.minsize(300, 200) # Allow small window size in mini mode
+            self.resizable(True, True) # Enable resizing during mini mode
+            self.geometry("470x450") # Set taller default size to fit caption and coaching cards
             self.attributes("-topmost", True) # Floating topmost
-            self.attributes("-alpha", 0.90) # Subtle translucent overlay look
+            self.attributes("-alpha", self.config_manager.get("mini_opacity", 0.90)) # Subtle translucent overlay look
         else:
             # Restore window settings
             self.attributes("-topmost", False)
             self.attributes("-alpha", 1.00) # Reset transparency
+            self.minsize(1000, 700) # Restore normal minsize
             self.resizable(True, True)
             
             # Put dashboard back to normal layout

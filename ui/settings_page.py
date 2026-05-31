@@ -217,9 +217,9 @@ class SettingsPage(ctk.CTkFrame):
             self.noise_red_switch.deselect()
         self.noise_red_switch.pack(anchor="w", padx=20, pady=(10, 10))
 
-        # CARD 3: SENSITIVITY & VAD SETTINGS (Row 1, Column 0 & 1 merged/spanned)
+        # CARD 3: SENSITIVITY & VAD SETTINGS (Row 1, Column 0)
         self.vad_card = ctk.CTkFrame(self, fg_color="#1E1E20", corner_radius=12)
-        self.vad_card.grid(row=1, column=0, columnspan=2, padx=15, pady=15, sticky="nsew")
+        self.vad_card.grid(row=1, column=0, columnspan=1, padx=15, pady=15, sticky="nsew")
         self.vad_card.grid_columnconfigure(0, weight=1)
         self.vad_card.grid_columnconfigure(1, weight=1)
         
@@ -287,7 +287,114 @@ class SettingsPage(ctk.CTkFrame):
             self.strict_filter_switch.select()
         else:
             self.strict_filter_switch.deselect()
-        self.strict_filter_switch.grid(row=4, column=0, columnspan=2, sticky="w", padx=20, pady=(15, 20))
+        self.strict_filter_switch.grid(row=4, column=0, sticky="w", padx=20, pady=(15, 20))
+        
+        # Mini Mode Opacity slider
+        opacity_frame = ctk.CTkFrame(self.vad_card, fg_color="transparent")
+        opacity_frame.grid(row=4, column=1, sticky="ew", padx=20, pady=(5, 20))
+        opacity_frame.grid_columnconfigure(0, weight=1)
+        
+        opacity_val = self.config_manager.get("mini_opacity", 0.90)
+        self.opacity_label = ctk.CTkLabel(
+            opacity_frame,
+            text=f"ความโปร่งใสหน้าต่างลอย (Mini Opacity): {int(opacity_val * 100)}%",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color="#BBBBBB"
+        )
+        self.opacity_label.grid(row=0, column=0, sticky="w", pady=(0, 2))
+        
+        self.opacity_slider = ctk.CTkSlider(
+            opacity_frame,
+            from_=0.20,
+            to=1.00,
+            number_of_steps=16,
+            command=self._on_opacity_changed
+        )
+        self.opacity_slider.set(opacity_val)
+        self.opacity_slider.grid(row=1, column=0, sticky="ew")
+        
+        # CARD 4: RESUME / PROFILE SETTINGS (Row 1, Column 1)
+        self.resume_card = ctk.CTkFrame(self, fg_color="#1E1E20", corner_radius=12)
+        self.resume_card.grid(row=1, column=1, padx=15, pady=15, sticky="nsew")
+        self.resume_card.grid_columnconfigure(0, weight=1)
+        
+        resume_title = ctk.CTkLabel(
+            self.resume_card,
+            text="ประวัติและเรซูเม่ (Resume & Profile)",
+            font=ctk.CTkFont(size=14, weight="bold"),
+            text_color="#FFFFFF"
+        )
+        resume_title.pack(anchor="w", padx=20, pady=(20, 5))
+        
+        resume_desc = ctk.CTkLabel(
+            self.resume_card,
+            text="อัปโหลดข้อมูลประวัติเพื่อช่วยให้ AI วิเคราะห์แนวทางคำตอบที่เข้ากับตัวคุณได้ดีที่สุด (ไม่เลือกไฟล์ก็ได้)",
+            font=ctk.CTkFont(size=11),
+            text_color="#888888",
+            justify="left",
+            wraplength=380
+        )
+        resume_desc.pack(anchor="w", padx=20, pady=(0, 15))
+        
+        # Switch to enable resume analysis
+        self.resume_switch = ctk.CTkSwitch(
+            self.resume_card,
+            text="เปิดใช้งานวิเคราะห์ประกอบการตอบคำถาม (Use Resume Context)",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            command=self._on_resume_toggle
+        )
+        saved_resume_enabled = self.config_manager.get("resume_enabled", False)
+        if saved_resume_enabled:
+            self.resume_switch.select()
+        else:
+            self.resume_switch.deselect()
+        self.resume_switch.pack(anchor="w", padx=20, pady=(0, 10))
+        
+        # File selector and clear buttons frame
+        btn_frame = ctk.CTkFrame(self.resume_card, fg_color="transparent")
+        btn_frame.pack(fill="x", padx=20, pady=(5, 5))
+        
+        self.upload_btn = ctk.CTkButton(
+            btn_frame,
+            text="📁 อัปโหลดไฟล์ (.pdf, .txt)",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            height=28,
+            command=self._on_resume_upload
+        )
+        self.upload_btn.pack(side="left", padx=(0, 10))
+        
+        self.clear_btn = ctk.CTkButton(
+            btn_frame,
+            text="ล้างข้อมูล",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            fg_color="#D9534F",
+            hover_color="#C9302C",
+            width=80,
+            height=28,
+            command=self._on_resume_clear
+        )
+        self.clear_btn.pack(side="left")
+        
+        # Filename indicator
+        saved_filename = self.config_manager.get("resume_filename", "")
+        self.filename_lbl = ctk.CTkLabel(
+            self.resume_card,
+            text=f"ไฟล์: {saved_filename}" if saved_filename else "ยังไม่ได้อัปโหลดไฟล์",
+            font=ctk.CTkFont(size=11, slant="italic"),
+            text_color="#888888"
+        )
+        self.filename_lbl.pack(anchor="w", padx=20, pady=(2, 8))
+        
+        # Textbox to paste or review resume text
+        self.resume_textbox = ctk.CTkTextbox(
+            self.resume_card,
+            height=100,
+            font=ctk.CTkFont(size=11),
+            wrap="word"
+        )
+        self.resume_textbox.pack(fill="both", expand=True, padx=20, pady=(2, 20))
+        self.resume_textbox.insert("1.0", self.config_manager.get("resume_text", ""))
+        self.resume_textbox.bind("<FocusOut>", self._save_resume_text)
         
     # =====================================================================
     # EVENT HANDLERS
@@ -315,11 +422,18 @@ class SettingsPage(ctk.CTkFrame):
         custom_model = self.custom_model_entry.get().strip()
         strict_filter = bool(self.strict_filter_switch.get())
         
+        # Get resume settings
+        resume_enabled = bool(self.resume_switch.get())
+        resume_text = self.resume_textbox.get("1.0", "end-1c").strip()
+        resume_filename = self.config_manager.get("resume_filename", "")
+        
         self.config_manager.set("gemini_api_key", gemini_key)
         self.config_manager.set("custom_base_url", custom_base_url)
         self.config_manager.set("custom_api_key", custom_key)
         self.config_manager.set("custom_model", custom_model)
         self.config_manager.set("strict_filter", strict_filter)
+        self.config_manager.set("resume_enabled", resume_enabled)
+        self.config_manager.set("resume_text", resume_text)
         
         # Sync to analyzer
         provider = self.config_manager.get("ai_provider", "gemini")
@@ -331,7 +445,9 @@ class SettingsPage(ctk.CTkFrame):
             custom_api_key=custom_key,
             custom_base_url=custom_base_url,
             custom_model=custom_model,
-            strict_filter=strict_filter
+            strict_filter=strict_filter,
+            resume_enabled=resume_enabled,
+            resume_text=resume_text
         )
         print("[Settings Log] AI settings saved and synced to analyzer.")
 
@@ -421,6 +537,19 @@ class SettingsPage(ctk.CTkFrame):
         self.config_manager.set("silence_duration", val)
         self.recorder.silence_duration = val
         
+    def _on_opacity_changed(self, value):
+        val = round(float(value), 2)
+        self.opacity_label.configure(text=f"ความโปร่งใสหน้าต่างลอย (Mini Opacity): {int(val * 100)}%")
+        self.config_manager.set("mini_opacity", val)
+        
+        # Instantly update active window alpha if currently in mini mode
+        try:
+            root = self.winfo_toplevel()
+            if hasattr(root, "is_mini_mode") and root.is_mini_mode:
+                root.attributes("-alpha", val)
+        except Exception as e:
+            print(f"[Settings Log] Failed to update window alpha: {e}")
+        
     # =====================================================================
     # PUBLIC HARDWARE SYNC HELPERS (Called from app.py)
     # =====================================================================
@@ -501,3 +630,70 @@ class SettingsPage(ctk.CTkFrame):
             self.recorder.device_index = saved_index
         else:
             self.device_menu.set("กรุณาเลือกอุปกรณ์เสียง")
+            
+    def _on_resume_toggle(self):
+        self._save_settings()
+        
+    def _save_resume_text(self, event=None):
+        self._save_settings()
+        
+    def _on_resume_clear(self):
+        self.resume_textbox.delete("1.0", "end")
+        self.config_manager.set("resume_filename", "")
+        self.filename_lbl.configure(text="ยังไม่ได้อัปโหลดไฟล์")
+        self._save_settings()
+        
+    def _on_resume_upload(self):
+        from tkinter import filedialog, messagebox
+        import os
+        
+        file_path = filedialog.askopenfilename(
+            title="เลือกไฟล์เรซูเม่ / ประวัติส่วนตัว",
+            filetypes=[("Text & PDF Files", "*.txt *.pdf"), ("PDF Files", "*.pdf"), ("Text Files", "*.txt")]
+        )
+        if not file_path:
+            return
+            
+        filename = os.path.basename(file_path)
+        ext = os.path.splitext(filename)[1].lower()
+        text_content = ""
+        
+        if ext == ".txt":
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    text_content = f.read()
+            except Exception as e:
+                try:
+                    # fallback to ansi/cp1252 if utf-8 fails
+                    with open(file_path, "r", encoding="ansi") as f:
+                        text_content = f.read()
+                except Exception as e2:
+                    messagebox.showerror("Error", f"ไม่สามารถอ่านไฟล์ข้อความได้: {e}")
+                    return
+        elif ext == ".pdf":
+            try:
+                import pypdf
+                reader = pypdf.PdfReader(file_path)
+                pages_text = []
+                for page in reader.pages:
+                    t = page.extract_text()
+                    if t:
+                        pages_text.append(t)
+                text_content = "\n".join(pages_text)
+                
+                if not text_content.strip():
+                    messagebox.showwarning("Warning", "ไม่พบข้อความในไฟล์ PDF นี้ (ไฟล์อาจเป็นรูปภาพสแกน)")
+            except ImportError:
+                messagebox.showerror("Error", "ไม่พบไลบรารี pypdf กรุณาติดตั้งโดยรันคำสั่ง pip install pypdf")
+                return
+            except Exception as e:
+                messagebox.showerror("Error", f"ไม่สามารถอ่านไฟล์ PDF ได้: {e}")
+                return
+                
+        if text_content:
+            self.resume_textbox.delete("1.0", "end")
+            self.resume_textbox.insert("1.0", text_content.strip())
+            self.config_manager.set("resume_filename", filename)
+            self.filename_lbl.configure(text=f"ไฟล์: {filename}")
+            self._save_settings()
+            messagebox.showinfo("Success", f"โหลดเรซูเม่จาก {filename} เรียบร้อยแล้ว (จำนวน {len(text_content)} ตัวอักษร)")

@@ -18,6 +18,10 @@ DEFAULT_CONFIG = {
     "custom_model": "",
     "strict_filter": False,
     "noise_reduction_enabled": True,
+    "mini_opacity": 0.90,
+    "resume_enabled": False,
+    "resume_text": "",
+    "resume_filename": "",
     "history": []
 }
 

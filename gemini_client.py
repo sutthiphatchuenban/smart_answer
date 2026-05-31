@@ -31,7 +31,7 @@ class InterviewAnalysis(BaseModel):
 class GeminiAnalyzer:
     def __init__(self, api_key="", model_name="gemini-3.1-flash-lite", 
                  provider="gemini", custom_api_key="", custom_base_url="", custom_model="",
-                 strict_filter=True):
+                 strict_filter=True, resume_enabled=False, resume_text=""):
         self.provider = provider
         self.api_key = api_key
         self.model_name = model_name
@@ -39,6 +39,8 @@ class GeminiAnalyzer:
         self.custom_base_url = custom_base_url
         self.custom_model = custom_model
         self.strict_filter = strict_filter
+        self.resume_enabled = resume_enabled
+        self.resume_text = resume_text
         
         self.client = None
         if api_key and provider == "gemini":
@@ -59,7 +61,7 @@ class GeminiAnalyzer:
         self.model_name = model_name
         print(f"Gemini Analyzer model updated to: {model_name}")
 
-    def update_provider_config(self, provider, api_key, model_name, custom_api_key, custom_base_url, custom_model, strict_filter=True):
+    def update_provider_config(self, provider, api_key, model_name, custom_api_key, custom_base_url, custom_model, strict_filter=True, resume_enabled=False, resume_text=""):
         self.provider = provider
         self.api_key = api_key
         self.model_name = model_name
@@ -67,6 +69,8 @@ class GeminiAnalyzer:
         self.custom_base_url = custom_base_url
         self.custom_model = custom_model
         self.strict_filter = strict_filter
+        self.resume_enabled = resume_enabled
+        self.resume_text = resume_text
         if provider == "gemini":
             self._init_client()
 
@@ -201,6 +205,17 @@ class GeminiAnalyzer:
 
         threading.Thread(target=worker, daemon=True).start()
 
+    def _get_resume_prompt_addition(self):
+        if self.resume_enabled and self.resume_text:
+            return f"""
+            
+            [Candidate Resume & Background Profile]
+            You have access to the candidate's resume/profile details. Use this context to personalize and tailor the "suggested_answer" (ตัวอย่างคำตอบที่แนะนำ) and "key_points" to highlight their actual relevant projects, skills, and background when answering. Do not fabricate experience not mentioned.
+            Candidate Profile:
+            {self.resume_text}
+            """
+        return ""
+
     def analyze_question(self, question_text, callback, status_callback=None):
         """Runs the AI structured text analysis for a transcribed question in a background thread."""
         if self.provider == "gemini":
@@ -234,11 +249,13 @@ class GeminiAnalyzer:
             def worker():
                 try:
                     print(f"[Gemini Log] Sending text to Gemini model '{self.model_name}' for structured analysis: '{question_text}'")
+                    resume_addition = self._get_resume_prompt_addition()
                     prompt = f"""
                     You are a premium career coaching assistant and interview expert. 
                     An interviewer just asked a question in a job interview. Here is the transcribed text of the question:
                     
                     "{question_text}"
+                    {resume_addition}
                     
                     Please perform the following steps:
                     1. Review the transcribed question text. Correct any transcription errors, spelling mistakes, or grammatical errors.
@@ -316,9 +333,11 @@ class GeminiAnalyzer:
                 if self.custom_api_key:
                     headers["Authorization"] = f"Bearer {self.custom_api_key}"
                 
+                resume_addition = self._get_resume_prompt_addition()
                 system_prompt = f"""
                 You are a premium career coaching assistant and interview expert.
                 An interviewer just asked a question in a job interview.
+                {resume_addition}
                 
                 You MUST return a valid JSON object matching the following structure:
                 {{

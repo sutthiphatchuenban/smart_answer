@@ -20,6 +20,8 @@ def create_coaching_card(parent, result, card_label=""):
     card.pack(fill="x", padx=10, pady=10)
     card.grid_columnconfigure(0, weight=1)
 
+    labels_to_wrap = []
+
     # Header Frame
     q_thai = result.get("question_thai") or "คำถามสัมภาษณ์"
     category = result.get("category") or "ทั่วไป"
@@ -40,6 +42,7 @@ def create_coaching_card(parent, result, card_label=""):
         wraplength=600
     )
     q_label.grid(row=0, column=0, padx=12, pady=8, sticky="w")
+    labels_to_wrap.append((q_label, 120))  # Offset for the category badge on the right
 
     cat_badge = ctk.CTkLabel(
         header_frame,
@@ -68,6 +71,7 @@ def create_coaching_card(parent, result, card_label=""):
             wraplength=780
         )
         focus_lbl.grid(row=1, column=0, sticky="w", padx=15, pady=(2, 6))
+        labels_to_wrap.append((focus_lbl, 20))
 
     # Coaching Sections Content
     content_frame = ctk.CTkFrame(card, fg_color="transparent")
@@ -87,6 +91,7 @@ def create_coaching_card(parent, result, card_label=""):
         
         ans_desc = ctk.CTkLabel(ans_box, text=ans_text, font=ctk.CTkFont(size=13, weight="normal"), justify="left", anchor="w", wraplength=670, text_color="#FFFFFF")
         ans_desc.grid(row=1, column=0, sticky="w", padx=12, pady=(0, 10))
+        labels_to_wrap.append((ans_desc, 50))
         ans_row_offset = 1
 
     # 2. Key Points to Answer
@@ -101,6 +106,7 @@ def create_coaching_card(parent, result, card_label=""):
         
     kp_desc = ctk.CTkLabel(content_frame, text=kp_text.strip(), font=ctk.CTkFont(size=12), justify="left", anchor="w", wraplength=700)
     kp_desc.grid(row=ans_row_offset + 1, column=0, sticky="w", padx=10, pady=(0, 5))
+    labels_to_wrap.append((kp_desc, 30))
 
     # 3. Answer Strategy
     strat_label = ctk.CTkLabel(content_frame, text="  กลยุทธ์การนำเสนอ/ข้อควรระวัง (Strategy):", image=icons["target"], compound="left", font=ctk.CTkFont(size=12, weight="bold"), text_color="#3498DB")
@@ -108,6 +114,7 @@ def create_coaching_card(parent, result, card_label=""):
     
     strat_desc = ctk.CTkLabel(content_frame, text=result.get("answer_strategy") or "ไม่มีกลยุทธ์เฉพาะ", font=ctk.CTkFont(size=12), justify="left", anchor="w", wraplength=700)
     strat_desc.grid(row=ans_row_offset + 3, column=0, sticky="w", padx=10, pady=(0, 5))
+    labels_to_wrap.append((strat_desc, 30))
 
     # 4. STAR Framework
     star = result.get("star_framework")
@@ -128,6 +135,7 @@ def create_coaching_card(parent, result, card_label=""):
             
         star_desc = ctk.CTkLabel(content_frame, text=star_text.strip(), font=ctk.CTkFont(size=12), justify="left", anchor="w", wraplength=700)
         star_desc.grid(row=curr_row+1, column=0, sticky="w", padx=10, pady=(0, 5))
+        labels_to_wrap.append((star_desc, 30))
         curr_row += 2
 
     # 5. Example Outline
@@ -142,5 +150,29 @@ def create_coaching_card(parent, result, card_label=""):
             
         out_desc = ctk.CTkLabel(content_frame, text=out_text.strip(), font=ctk.CTkFont(size=12), justify="left", anchor="w", wraplength=700)
         out_desc.grid(row=curr_row+1, column=0, sticky="w", padx=10, pady=(0, 10))
+        labels_to_wrap.append((out_desc, 30))
+
+    # Dynamic auto-wrap configuration on resize
+    card._last_width = 0
+
+    def _on_card_configure(event):
+        card_width = event.width
+        if card_width == card._last_width:
+            return
+        card._last_width = card_width
+        
+        # Calculate text area width (with safety margin)
+        text_width = card_width - 40
+        if text_width < 100:
+            text_width = 100
+            
+        for lbl, offset in labels_to_wrap:
+            try:
+                # Dynamically set wraplength based on current card width minus padding/offset
+                lbl.configure(wraplength=max(80, text_width - offset))
+            except Exception:
+                pass
+
+    card.bind("<Configure>", _on_card_configure)
 
     return card

@@ -218,14 +218,14 @@ class AudioRecorder:
                                 
                             max_noise_rms = np.max(self.calibration_rms_values) if self.calibration_rms_values else 0.01
                             self.background_noise_rms = np.mean(self.calibration_rms_values) if self.calibration_rms_values else 0.005
-                            # Smart autotune: never exceed 0.025 to ensure quiet voice triggers VAD, while staying above background hum
+                            # Smart autotune: never exceed 0.080 to ensure quiet voice triggers VAD, while staying above background hum
                             if max_noise_rms < 0.010:
                                 self.silence_threshold = max_noise_rms + 0.008
-                            elif max_noise_rms < 0.025:
+                            elif max_noise_rms < 0.080:
                                 self.silence_threshold = max_noise_rms + 0.006
                             else:
-                                self.silence_threshold = 0.025
-                            self.silence_threshold = max(0.003, min(0.025, self.silence_threshold))
+                                self.silence_threshold = 0.080
+                            self.silence_threshold = max(0.003, min(0.080, self.silence_threshold))
                             
                             self.calibrating = False
                             print(f"Calibration complete. Autotuned silence threshold to: {self.silence_threshold:.3f}")
@@ -274,11 +274,11 @@ class AudioRecorder:
                                     # Auto adjust VAD threshold
                                     if self.background_noise_rms < 0.010:
                                         self.silence_threshold = self.background_noise_rms + 0.008
-                                    elif self.background_noise_rms < 0.025:
+                                    elif self.background_noise_rms < 0.080:
                                         self.silence_threshold = self.background_noise_rms + 0.006
                                     else:
-                                        self.silence_threshold = 0.025
-                                    self.silence_threshold = max(0.003, min(0.025, self.silence_threshold))
+                                        self.silence_threshold = 0.080
+                                    self.silence_threshold = max(0.003, min(0.080, self.silence_threshold))
                                 
                     # Send live chunk for real-time transcription if speaking
                     current_time = time.time()
@@ -463,14 +463,14 @@ class AudioRecorder:
                         
                         max_noise_rms = np.max(self.calibration_rms_values) if self.calibration_rms_values else 0.01
                         self.background_noise_rms = np.mean(self.calibration_rms_values) if self.calibration_rms_values else 0.005
-                        # Smart autotune: never exceed 0.025 to ensure quiet voice triggers VAD, while staying above background hum
+                        # Smart autotune: never exceed 0.080 to ensure quiet voice triggers VAD, while staying above background hum
                         if max_noise_rms < 0.010:
                             self.silence_threshold = max_noise_rms + 0.008
-                        elif max_noise_rms < 0.025:
+                        elif max_noise_rms < 0.080:
                             self.silence_threshold = max_noise_rms + 0.006
                         else:
-                            self.silence_threshold = 0.025
-                        self.silence_threshold = max(0.003, min(0.025, self.silence_threshold))
+                            self.silence_threshold = 0.080
+                        self.silence_threshold = max(0.003, min(0.080, self.silence_threshold))
                         
                         self.calibrating = False
                         print(f"Calibration complete. Autotuned silence threshold to: {self.silence_threshold:.3f}")
@@ -518,11 +518,11 @@ class AudioRecorder:
                                 # Auto adjust VAD threshold
                                 if self.background_noise_rms < 0.010:
                                     self.silence_threshold = self.background_noise_rms + 0.008
-                                elif self.background_noise_rms < 0.025:
+                                elif self.background_noise_rms < 0.080:
                                     self.silence_threshold = self.background_noise_rms + 0.006
                                 else:
-                                    self.silence_threshold = 0.025
-                                self.silence_threshold = max(0.003, min(0.025, self.silence_threshold))
+                                    self.silence_threshold = 0.080
+                                self.silence_threshold = max(0.003, min(0.080, self.silence_threshold))
                 
                 # Send live chunk for real-time transcription
                 current_time = time.time()
