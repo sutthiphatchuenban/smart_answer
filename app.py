@@ -217,13 +217,21 @@ class SmartAnswerApp(ctk.CTk):
             # Put dashboard in mini layout
             self.dashboard_page.set_mini_mode(True)
             
+            # Force de-maximize/restore window state if it was maximized
+            try:
+                self.state("normal")
+            except Exception:
+                pass
+            
             # Change window settings
             self.resizable(False, False) # Disable resizing during mini mode
             self.geometry("470x200") # Set small size
             self.attributes("-topmost", True) # Floating topmost
+            self.attributes("-alpha", 0.90) # Subtle translucent overlay look
         else:
             # Restore window settings
             self.attributes("-topmost", False)
+            self.attributes("-alpha", 1.00) # Reset transparency
             self.resizable(True, True)
             
             # Put dashboard back to normal layout
