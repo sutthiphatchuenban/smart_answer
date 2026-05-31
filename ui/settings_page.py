@@ -36,37 +36,111 @@ class SettingsPage(ctk.CTkFrame):
         ai_title = ctk.CTkLabel(self.ai_card, text="การตั้งค่าระบบปัญญาประดิษฐ์ (AI API Settings)", font=ctk.CTkFont(size=14, weight="bold"), text_color="#FFFFFF")
         ai_title.pack(anchor="w", padx=20, pady=(20, 5))
         
-        ai_desc = ctk.CTkLabel(self.ai_card, text="เชื่อมต่อกับโมเดล Gemini เพื่อทำการวิเคราะห์โครงสร้างและสรุปแนวคำตอบสัมภาษณ์", font=ctk.CTkFont(size=11), text_color="#888888", justify="left")
-        ai_desc.pack(anchor="w", padx=20, pady=(0, 20))
+        ai_desc = ctk.CTkLabel(self.ai_card, text="เชื่อมต่อกับโมเดล Gemini หรือผู้ให้บริการที่รองรับ OpenAI API สำหรับการวิเคราะห์คำถาม", font=ctk.CTkFont(size=11), text_color="#888888", justify="left")
+        ai_desc.pack(anchor="w", padx=20, pady=(0, 15))
+        
+        # AI Provider Selection
+        provider_lbl = ctk.CTkLabel(self.ai_card, text="เลือกผู้ให้บริการ (AI Provider):", font=ctk.CTkFont(size=12, weight="bold"), text_color="#BBBBBB")
+        provider_lbl.pack(anchor="w", padx=20, pady=(0, 2))
+        
+        self.provider_switch = ctk.CTkSegmentedButton(
+            self.ai_card,
+            values=["Google Gemini", "Custom (OpenAI)"],
+            height=32,
+            command=self._on_provider_changed
+        )
+        saved_provider = self.config_manager.get("ai_provider", "gemini")
+        self.provider_switch.set("Google Gemini" if saved_provider == "gemini" else "Custom (OpenAI)")
+        self.provider_switch.pack(fill="x", padx=20, pady=(2, 15))
+        
+        # Frame for Google Gemini Settings
+        self.gemini_frame = ctk.CTkFrame(self.ai_card, fg_color="transparent")
         
         # API Key Field
-        key_lbl = ctk.CTkLabel(self.ai_card, text="คีย์เปิดใช้งาน Gemini API Key:", font=ctk.CTkFont(size=12, weight="bold"), text_color="#BBBBBB")
-        key_lbl.pack(anchor="w", padx=20, pady=(5, 2))
+        key_lbl = ctk.CTkLabel(self.gemini_frame, text="คีย์เปิดใช้งาน Gemini API Key:", font=ctk.CTkFont(size=12, weight="bold"), text_color="#BBBBBB")
+        key_lbl.pack(anchor="w", padx=0, pady=(0, 2))
         
         # Link to get Gemini API Key from Google AI Studio
         link_lbl = ctk.CTkLabel(
-            self.ai_card,
+            self.gemini_frame,
             text="รับ API Key ฟรีได้ที่: https://aistudio.google.com/api-keys",
             font=ctk.CTkFont(size=11, underline=True),
             text_color="#3498DB",
             cursor="hand2"
         )
-        link_lbl.pack(anchor="w", padx=20, pady=(0, 6))
+        link_lbl.pack(anchor="w", padx=0, pady=(0, 6))
         link_lbl.bind("<Button-1>", lambda e: webbrowser.open("https://aistudio.google.com/api-keys"))
         
         self.api_key_entry = ctk.CTkEntry(
-            self.ai_card,
+            self.gemini_frame,
             placeholder_text="วางคีย์ AIzaSy... ของคุณที่นี่",
             show="*",
             height=32
         )
         self.api_key_entry.insert(0, self.config_manager.get("gemini_api_key", ""))
-        self.api_key_entry.pack(fill="x", padx=20, pady=(2, 8))
-        self.api_key_entry.bind("<FocusOut>", self._save_api_key)
+        self.api_key_entry.pack(fill="x", padx=0, pady=(2, 8))
+        self.api_key_entry.bind("<FocusOut>", self._save_settings)
         
-        # API Key Action Frame
+        # Model Selection dropdown
+        model_lbl = ctk.CTkLabel(self.gemini_frame, text="โมเดลปัญญาประดิษฐ์ (Gemini Model):", font=ctk.CTkFont(size=12, weight="bold"), text_color="#BBBBBB")
+        model_lbl.pack(anchor="w", padx=0, pady=(10, 2))
+        
+        self.model_menu = ctk.CTkOptionMenu(
+            self.gemini_frame,
+            values=["gemini-3.1-flash-lite", "gemini-flash-lite-latest"],
+            height=32,
+            command=self._on_model_changed
+        )
+        saved_model = self.config_manager.get("gemini_model", "gemini-3.1-flash-lite")
+        self.model_menu.set(saved_model)
+        self.model_menu.pack(fill="x", padx=0, pady=(2, 10))
+        
+        # Frame for Custom OpenAI-Compatible Settings
+        self.custom_frame = ctk.CTkFrame(self.ai_card, fg_color="transparent")
+        
+        # Base URL Field
+        base_url_lbl = ctk.CTkLabel(self.custom_frame, text="API Base URL (Endpoint):", font=ctk.CTkFont(size=12, weight="bold"), text_color="#BBBBBB")
+        base_url_lbl.pack(anchor="w", padx=0, pady=(0, 2))
+        
+        self.custom_base_url_entry = ctk.CTkEntry(
+            self.custom_frame,
+            placeholder_text="เช่น https://api.openai.com/v1 หรือ http://localhost:11434/v1",
+            height=32
+        )
+        self.custom_base_url_entry.insert(0, self.config_manager.get("custom_base_url", ""))
+        self.custom_base_url_entry.pack(fill="x", padx=0, pady=(2, 8))
+        self.custom_base_url_entry.bind("<FocusOut>", self._save_settings)
+        
+        # Custom API Key Field
+        custom_key_lbl = ctk.CTkLabel(self.custom_frame, text="Custom API Key (ถ้ามี):", font=ctk.CTkFont(size=12, weight="bold"), text_color="#BBBBBB")
+        custom_key_lbl.pack(anchor="w", padx=0, pady=(5, 2))
+        
+        self.custom_api_key_entry = ctk.CTkEntry(
+            self.custom_frame,
+            placeholder_text="วาง API Key (ว่างได้หากใช้งานภายในเครื่อง เช่น Ollama)",
+            show="*",
+            height=32
+        )
+        self.custom_api_key_entry.insert(0, self.config_manager.get("custom_api_key", ""))
+        self.custom_api_key_entry.pack(fill="x", padx=0, pady=(2, 8))
+        self.custom_api_key_entry.bind("<FocusOut>", self._save_settings)
+        
+        # Custom Model Name Field
+        custom_model_lbl = ctk.CTkLabel(self.custom_frame, text="ชื่อโมเดล (Model Name):", font=ctk.CTkFont(size=12, weight="bold"), text_color="#BBBBBB")
+        custom_model_lbl.pack(anchor="w", padx=0, pady=(5, 2))
+        
+        self.custom_model_entry = ctk.CTkEntry(
+            self.custom_frame,
+            placeholder_text="เช่น gpt-4o, llama3, deepseek-chat",
+            height=32
+        )
+        self.custom_model_entry.insert(0, self.config_manager.get("custom_model", ""))
+        self.custom_model_entry.pack(fill="x", padx=0, pady=(2, 10))
+        self.custom_model_entry.bind("<FocusOut>", self._save_settings)
+        
+        # API Key Action Frame (Shared at the bottom of the card)
         key_actions = ctk.CTkFrame(self.ai_card, fg_color="transparent")
-        key_actions.pack(fill="x", padx=20, pady=(2, 12))
+        key_actions.pack(fill="x", padx=20, pady=(10, 20))
         
         self.test_key_btn = ctk.CTkButton(
             key_actions,
@@ -88,19 +162,8 @@ class SettingsPage(ctk.CTkFrame):
         )
         self.key_status_lbl.pack(side="left", padx=10)
         
-        # Model Selection dropdown
-        model_lbl = ctk.CTkLabel(self.ai_card, text="โมเดลปัญญาประดิษฐ์ (Gemini Model):", font=ctk.CTkFont(size=12, weight="bold"), text_color="#BBBBBB")
-        model_lbl.pack(anchor="w", padx=20, pady=(10, 2))
-        
-        self.model_menu = ctk.CTkOptionMenu(
-            self.ai_card,
-            values=["gemini-3.1-flash-lite", "gemini-flash-lite-latest"],
-            height=32,
-            command=self._on_model_changed
-        )
-        saved_model = self.config_manager.get("gemini_model", "gemini-3.1-flash-lite")
-        self.model_menu.set(saved_model)
-        self.model_menu.pack(fill="x", padx=20, pady=(2, 10))
+        # Display the active settings frame
+        self._toggle_provider_ui(saved_provider)
 
         # CARD 2: AUDIO HARDWARE (Row 0, Col 1)
         self.audio_card = ctk.CTkFrame(self, fg_color="#1E1E20", corner_radius=12)
@@ -216,20 +279,60 @@ class SettingsPage(ctk.CTkFrame):
     # EVENT HANDLERS
     # =====================================================================
     
-    def _save_api_key(self, event=None):
-        api_key = self.api_key_entry.get().strip()
-        self.config_manager.set("gemini_api_key", api_key)
-        self.analyzer.update_api_key(api_key)
-        print("[Settings Log] Gemini API Key updated and saved.")
+    def _on_provider_changed(self, selected_provider_thai):
+        provider = "gemini" if selected_provider_thai == "Google Gemini" else "custom"
+        self.config_manager.set("ai_provider", provider)
+        self._toggle_provider_ui(provider)
+        self._save_settings()
+        print(f"[Settings Log] AI Provider changed to {provider}")
+        
+    def _toggle_provider_ui(self, provider):
+        if provider == "gemini":
+            self.custom_frame.pack_forget()
+            self.gemini_frame.pack(fill="x", padx=20, pady=(0, 10))
+        else:
+            self.gemini_frame.pack_forget()
+            self.custom_frame.pack(fill="x", padx=20, pady=(0, 10))
+
+    def _save_settings(self, event=None):
+        gemini_key = self.api_key_entry.get().strip()
+        custom_base_url = self.custom_base_url_entry.get().strip()
+        custom_key = self.custom_api_key_entry.get().strip()
+        custom_model = self.custom_model_entry.get().strip()
+        
+        self.config_manager.set("gemini_api_key", gemini_key)
+        self.config_manager.set("custom_base_url", custom_base_url)
+        self.config_manager.set("custom_api_key", custom_key)
+        self.config_manager.set("custom_model", custom_model)
+        
+        # Sync to analyzer
+        provider = self.config_manager.get("ai_provider", "gemini")
+        gemini_model = self.config_manager.get("gemini_model", "gemini-3.1-flash-lite")
+        self.analyzer.update_provider_config(
+            provider=provider,
+            api_key=gemini_key,
+            model_name=gemini_model,
+            custom_api_key=custom_key,
+            custom_base_url=custom_base_url,
+            custom_model=custom_model
+        )
+        print("[Settings Log] AI settings saved and synced to analyzer.")
 
     def _on_test_api_key(self):
-        # Save key first to ensure config and analyzer have it
-        self._save_api_key()
+        # Save all settings first to ensure config and analyzer have the latest values
+        self._save_settings()
         
-        api_key = self.api_key_entry.get().strip()
-        if not api_key:
-            self.key_status_lbl.configure(text="กรุณากรอก API Key ก่อนทดสอบ", text_color="#D9534F")
-            return
+        provider = self.config_manager.get("ai_provider", "gemini")
+        if provider == "gemini":
+            api_key = self.api_key_entry.get().strip()
+            if not api_key:
+                self.key_status_lbl.configure(text="กรุณากรอก API Key ก่อนทดสอบ", text_color="#D9534F")
+                return
+        else:
+            base_url = self.custom_base_url_entry.get().strip()
+            if not base_url:
+                self.key_status_lbl.configure(text="กรุณากรอก Base URL ก่อนทดสอบ", text_color="#D9534F")
+                return
             
         self.key_status_lbl.configure(text="กำลังทดสอบเชื่อมต่อ...", text_color="#3498DB")
         self.test_key_btn.configure(state="disabled")

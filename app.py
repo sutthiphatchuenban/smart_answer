@@ -70,7 +70,11 @@ class SmartAnswerApp(ctk.CTk):
         )
         self.analyzer = GeminiAnalyzer(
             api_key=self.config_manager.get("gemini_api_key"),
-            model_name=self.config_manager.get("gemini_model", "gemini-3.1-flash-lite")
+            model_name=self.config_manager.get("gemini_model", "gemini-3.1-flash-lite"),
+            provider=self.config_manager.get("ai_provider", "gemini"),
+            custom_api_key=self.config_manager.get("custom_api_key", ""),
+            custom_base_url=self.config_manager.get("custom_base_url", ""),
+            custom_model=self.config_manager.get("custom_model", "")
         )
         
         # App-level state

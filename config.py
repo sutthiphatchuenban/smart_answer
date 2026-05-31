@@ -4,6 +4,7 @@ import json
 CONFIG_FILE = "config.json"
 
 DEFAULT_CONFIG = {
+    "ai_provider": "gemini",
     "gemini_api_key": "",
     "whisper_model": "base",
     "audio_device_index": None,
@@ -12,6 +13,9 @@ DEFAULT_CONFIG = {
     "silence_duration": 1.2,
     "compute_type": "int8",
     "gemini_model": "gemini-3.1-flash-lite",
+    "custom_api_key": "",
+    "custom_base_url": "",
+    "custom_model": "",
     "noise_reduction_enabled": True,
     "history": []
 }
