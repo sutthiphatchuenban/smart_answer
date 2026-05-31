@@ -10,13 +10,13 @@ DEFAULT_CONFIG = {
     "audio_device_index": None,
     "audio_source_type": "mic",
     "silence_threshold": 0.01,
-    "silence_duration": 1.2,
+    "silence_duration": 1.0,
     "compute_type": "int8",
     "gemini_model": "gemini-3.1-flash-lite",
     "custom_api_key": "",
     "custom_base_url": "",
     "custom_model": "",
-    "strict_filter": True,
+    "strict_filter": False,
     "noise_reduction_enabled": True,
     "history": []
 }
