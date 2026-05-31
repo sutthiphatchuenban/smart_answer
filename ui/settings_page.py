@@ -1,5 +1,6 @@
 import customtkinter as ctk
 import threading
+import webbrowser
 from audio import get_audio_devices, find_default_microphone_device, find_system_audio_device
 
 class SettingsPage(ctk.CTkFrame):
@@ -41,6 +42,17 @@ class SettingsPage(ctk.CTkFrame):
         # API Key Field
         key_lbl = ctk.CTkLabel(self.ai_card, text="คีย์เปิดใช้งาน Gemini API Key:", font=ctk.CTkFont(size=12, weight="bold"), text_color="#BBBBBB")
         key_lbl.pack(anchor="w", padx=20, pady=(5, 2))
+        
+        # Link to get Gemini API Key from Google AI Studio
+        link_lbl = ctk.CTkLabel(
+            self.ai_card,
+            text="รับ API Key ฟรีได้ที่: https://aistudio.google.com/api-keys",
+            font=ctk.CTkFont(size=11, underline=True),
+            text_color="#3498DB",
+            cursor="hand2"
+        )
+        link_lbl.pack(anchor="w", padx=20, pady=(0, 6))
+        link_lbl.bind("<Button-1>", lambda e: webbrowser.open("https://aistudio.google.com/api-keys"))
         
         self.api_key_entry = ctk.CTkEntry(
             self.ai_card,
