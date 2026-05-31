@@ -127,10 +127,15 @@ python app.py
    ```bash
    python generate_ico.py
    ```
-3. **คอมไพล์โปรแกรมด้วย PyInstaller** โดยการสั่งรันไฟล์คอนฟิกูเรชัน `app.spec` ที่มีอยู่ในโครงการ:
-   ```bash
-   pyinstaller app.spec
-   ```
+3. **คอมไพล์โปรแกรมด้วย PyInstaller**:
+   * **วิธีที่ 1 (แบบบรรทัดเดียว - แนะนำ)**: สั่งคอมไพล์โปรแกรมแบบไฟล์เดี่ยว (Single File) พร้อมซ่อนหน้าต่าง Console, ใส่ไอคอน และดึงธีม UI CustomTkinter พร้อมตัดโมเดล Whisper ออกเพื่อความกะทัดรัด:
+     ```bash
+     .venv\Scripts\pyinstaller -F -w --icon=app_icon.ico --collect-all customtkinter --exclude-module faster_whisper app.py
+     ```
+   * **วิธีที่ 2 (แบบอ้างอิง Spec File)**: คอมไพล์ผ่านไฟล์ตั้งค่า `app.spec` ที่มากับโครงการ:
+     ```bash
+     pyinstaller app.spec
+     ```
 4. เมื่อกระบวนการสร้างเสร็จสิ้น คุณจะพบไฟล์แอปพลิเคชัน `.exe` ที่พร้อมใช้งานภายในโฟลเดอร์:
    `dist/app.exe`
 
