@@ -4,6 +4,7 @@ from .navigation import NavigationFrame
 from .dashboard_page import DashboardPage
 from .history_page import HistoryPage
 from .settings_page import SettingsPage
+from .guide_page import GuidePage
 from .coaching_card import create_coaching_card
 
 __all__ = [
@@ -11,6 +12,7 @@ __all__ = [
     "DashboardPage",
     "HistoryPage",
     "SettingsPage",
+    "GuidePage",
     "create_coaching_card",
 ]
 

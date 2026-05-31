@@ -14,14 +14,15 @@ class NavigationFrame(ctk.CTkFrame):
         self.button_texts = {
             "dashboard": "หน้าหลัก",
             "history": "ประวัติการถาม",
-            "settings": "การตั้งค่า"
+            "settings": "การตั้งค่า",
+            "guide": "คู่มือการใช้งาน"
         }
         self.is_collapsed = False
         
         # Lock frame size to width parameter
         self.grid_propagate(False)
         
-        self.grid_rowconfigure(5, weight=1) # Empty space pushes status to bottom
+        self.grid_rowconfigure(6, weight=1) # Empty space pushes status to bottom
         self.grid_columnconfigure(0, weight=1)
         self._build_ui()
         
@@ -62,10 +63,11 @@ class NavigationFrame(ctk.CTkFrame):
         self._create_nav_button("dashboard", self.button_texts["dashboard"], icons["home"], row=2)
         self._create_nav_button("history", self.button_texts["history"], icons["history"], row=3)
         self._create_nav_button("settings", self.button_texts["settings"], icons["settings"], row=4)
+        self._create_nav_button("guide", self.button_texts["guide"], icons["info"], row=5)
         
         # Status Card at the bottom
         self.status_card = ctk.CTkFrame(self, fg_color="#222224", corner_radius=8, height=75)
-        self.status_card.grid(row=6, column=0, padx=8, pady=15, sticky="ew")
+        self.status_card.grid(row=7, column=0, padx=8, pady=15, sticky="ew")
         self.status_card.grid_columnconfigure(0, weight=1)
         
         self.status_dot = ctk.CTkLabel(

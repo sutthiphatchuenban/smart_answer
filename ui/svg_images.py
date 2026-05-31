@@ -103,6 +103,8 @@ SVG_MINIMIZE = """<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
 
 SVG_MAXIMIZE = """<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>"""
 
+SVG_INFO = """<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>"""
+
 # Pre-compiled CTkImages
 icons = {
     "home": get_svg_image(SVG_HOME, size=(18, 18)),
@@ -125,5 +127,6 @@ icons = {
     "chevron_right": get_svg_image(SVG_CHEVRON_RIGHT, size=(14, 14)),
     "minimize": get_svg_image(SVG_MINIMIZE, size=(16, 16)),
     "maximize": get_svg_image(SVG_MAXIMIZE, size=(16, 16)),
+    "info": get_svg_image(SVG_INFO, size=(18, 18)),
 }
 

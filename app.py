@@ -21,7 +21,7 @@ from transcriber import WhisperTranscriber  # Backed by Google Speech Recognitio
 from gemini_client import GeminiAnalyzer
 
 # Import UI components
-from ui import NavigationFrame, DashboardPage, HistoryPage, SettingsPage, create_coaching_card
+from ui import NavigationFrame, DashboardPage, HistoryPage, SettingsPage, GuidePage, create_coaching_card
 
 # Set appearance settings for customtkinter
 ctk.set_appearance_mode("dark")
@@ -195,11 +195,15 @@ class SmartAnswerApp(ctk.CTk):
         )
         self.settings_page.grid(row=0, column=0, sticky="nsew")
         
+        self.guide_page = GuidePage(self.container)
+        self.guide_page.grid(row=0, column=0, sticky="nsew")
+        
         # Page dictionary for switching
         self.pages = {
             'dashboard': self.dashboard_page,
             'history': self.history_page,
-            'settings': self.settings_page
+            'settings': self.settings_page,
+            'guide': self.guide_page
         }
         
         # Map main_content to dashboard_page to keep callbacks backward-compatible
