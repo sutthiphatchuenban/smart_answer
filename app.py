@@ -54,9 +54,13 @@ class SmartAnswerApp(ctk.CTk):
             self.iconphoto(False, icon_photo)
         except Exception as e:
             print(f"[Icon Log] Failed to set window icon: {e}")
-        
         # Initialize Managers
         self.config_manager = ConfigManager()
+        
+        # Load and apply zoom factor (default 1.0)
+        self.zoom_factor = self.config_manager.get("zoom_factor", 1.0)
+        ctk.set_widget_scaling(self.zoom_factor)
+        
         self.recorder = AudioRecorder(
             device_index=self.config_manager.get("audio_device_index"),
             silence_threshold=self.config_manager.get("silence_threshold", 0.015),
@@ -109,6 +113,15 @@ class SmartAnswerApp(ctk.CTk):
         
         # Load saved history into history page
         self._load_saved_history()
+        
+        # Bind keyboard shortcuts for zoom (Ctrl +, Ctrl -, Ctrl 0)
+        self.bind_all("<Control-equal>", self._zoom_in)
+        self.bind_all("<Control-plus>", self._zoom_in)
+        self.bind_all("<Control-KP_Add>", self._zoom_in)
+        self.bind_all("<Control-minus>", self._zoom_out)
+        self.bind_all("<Control-KP_Subtract>", self._zoom_out)
+        self.bind_all("<Control-0>", self._zoom_reset)
+        self.bind_all("<Control-KP_0>", self._zoom_reset)
         
         # If API Key is empty, automatically redirect the user to Settings page
         if not self.config_manager.get("gemini_api_key"):
@@ -488,6 +501,28 @@ class SmartAnswerApp(ctk.CTk):
     def _load_saved_history(self):
         history = self.config_manager.get("history", [])
         self.history_page.load_history(history)
+
+    # =====================================================================
+    # ZOOM CONTROL (Ctrl + / Ctrl - / Ctrl 0)
+    # =====================================================================
+
+    def _zoom_in(self, event=None):
+        self.zoom_factor = min(2.0, self.zoom_factor + 0.1)
+        self._apply_zoom()
+
+    def _zoom_out(self, event=None):
+        self.zoom_factor = max(0.6, self.zoom_factor - 0.1)
+        self._apply_zoom()
+
+    def _zoom_reset(self, event=None):
+        self.zoom_factor = 1.0
+        self._apply_zoom()
+
+    def _apply_zoom(self):
+        self.zoom_factor = round(self.zoom_factor, 2)
+        self.config_manager.set("zoom_factor", self.zoom_factor)
+        ctk.set_widget_scaling(self.zoom_factor)
+        print(f"[Zoom Log] Dynamic zoom applied: {self.zoom_factor}")
 
 if __name__ == "__main__":
     app = SmartAnswerApp()

@@ -162,7 +162,15 @@ def create_coaching_card(parent, result, card_label=""):
         card._last_width = card_width
         
         # Calculate text area width (with safety margin)
-        text_width = card_width - 40
+        # Convert raw pixels to virtual pixels using the widget scaling factor,
+        # because event.width is raw pixels, but configure(wraplength=...) expects virtual pixels.
+        try:
+            scaling = card._get_widget_scaling()
+        except Exception:
+            scaling = 1.0
+            
+        virtual_width = card_width / scaling
+        text_width = virtual_width - 40
         if text_width < 100:
             text_width = 100
             

@@ -19,6 +19,7 @@ DEFAULT_CONFIG = {
     "strict_filter": False,
     "noise_reduction_enabled": True,
     "mini_opacity": 0.90,
+    "zoom_factor": 1.0,
     "resume_enabled": False,
     "resume_text": "",
     "resume_filename": "",

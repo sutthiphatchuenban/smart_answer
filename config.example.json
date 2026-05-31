@@ -14,6 +14,7 @@
     "strict_filter": false,
     "noise_reduction_enabled": true,
     "mini_opacity": 0.90,
+    "zoom_factor": 1.0,
     "resume_enabled": false,
     "resume_text": "",
     "resume_filename": "",
