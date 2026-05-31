@@ -1,0 +1,43 @@
+# Python byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.env
+
+# Application config (contains sensitive Gemini API key & local history)
+config.json
+
+# Audio recording cache files
+*.wav
+*.mp3
+*.m4a
+
+# Logs and transient files
+*.log
+artifacts_link
+.gemini/
+
+# IDE files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+Thumbs.db
+Desktop.ini
+
+# PyInstaller build files and outputs
+build/
+dist/
+*.spec
+app_icon.ico
+

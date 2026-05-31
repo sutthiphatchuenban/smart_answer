@@ -1,0 +1,12 @@
+{
+    "gemini_api_key": "",
+    "whisper_model": "base",
+    "audio_device_index": null,
+    "audio_source_type": "mic",
+    "silence_threshold": 0.015,
+    "silence_duration": 1.2,
+    "compute_type": "int8",
+    "gemini_model": "gemini-3.1-flash-lite",
+    "noise_reduction_enabled": true,
+    "history": []
+}
