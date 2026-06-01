@@ -125,7 +125,7 @@ class GeminiAnalyzer:
                 "max_tokens": 5
             }
             try:
-                response = requests.post(url, headers=headers, json=data, timeout=8)
+                response = requests.post(url, headers=headers, json=data, timeout=25)
                 if response.status_code == 200:
                     return True, "พร้อมใช้งาน! เชื่อมต่อสำเร็จ"
                 else:
