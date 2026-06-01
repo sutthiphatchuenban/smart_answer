@@ -19,17 +19,24 @@ class SettingsPage(ctk.CTkFrame):
         self.filtered_devices = []
         self.devices = []
         
-        # Split layout: 2 equal columns, 2 rows
+        # Single column/row layout to contain scroll_container
         self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
-        self.grid_rowconfigure(1, weight=1)
+        
+        self.scroll_container = ctk.CTkScrollableFrame(self, fg_color="transparent")
+        self.scroll_container.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        
+        # Split layout inside scrollable container: 2 columns, 2 rows
+        self.scroll_container.grid_columnconfigure(0, weight=1)
+        self.scroll_container.grid_columnconfigure(1, weight=1)
+        self.scroll_container.grid_rowconfigure(0, weight=1)
+        self.scroll_container.grid_rowconfigure(1, weight=1)
         
         self._build_ui()
         
     def _build_ui(self):
         # CARD 1: AI API CONFIGURATION (Row 0, Col 0)
-        self.ai_card = ctk.CTkFrame(self, fg_color="#1E1E20", corner_radius=12)
+        self.ai_card = ctk.CTkFrame(self.scroll_container, fg_color="#1E1E20", corner_radius=12)
         self.ai_card.grid(row=0, column=0, padx=15, pady=15, sticky="nsew")
         self.ai_card.grid_columnconfigure(0, weight=1)
         
@@ -139,11 +146,11 @@ class SettingsPage(ctk.CTkFrame):
         self.custom_model_entry.bind("<FocusOut>", self._save_settings)
         
         # API Key Action Frame (Shared at the bottom of the card)
-        key_actions = ctk.CTkFrame(self.ai_card, fg_color="transparent")
-        key_actions.pack(fill="x", padx=20, pady=(10, 20))
+        self.key_actions = ctk.CTkFrame(self.ai_card, fg_color="transparent")
+        self.key_actions.pack(fill="x", padx=20, pady=(10, 20))
         
         self.test_key_btn = ctk.CTkButton(
-            key_actions,
+            self.key_actions,
             text=" ทดสอบเชื่อมต่อ",
             font=ctk.CTkFont(size=11, weight="bold"),
             width=110,
@@ -155,7 +162,7 @@ class SettingsPage(ctk.CTkFrame):
         self.test_key_btn.pack(side="left")
         
         self.key_status_lbl = ctk.CTkLabel(
-            key_actions,
+            self.key_actions,
             text="ยังไม่ได้ทดสอบเชื่อมต่อ",
             font=ctk.CTkFont(size=11),
             text_color="#888888"
@@ -166,7 +173,7 @@ class SettingsPage(ctk.CTkFrame):
         self._toggle_provider_ui(saved_provider)
 
         # CARD 2: AUDIO HARDWARE (Row 0, Col 1)
-        self.audio_card = ctk.CTkFrame(self, fg_color="#1E1E20", corner_radius=12)
+        self.audio_card = ctk.CTkFrame(self.scroll_container, fg_color="#1E1E20", corner_radius=12)
         self.audio_card.grid(row=0, column=1, padx=15, pady=15, sticky="nsew")
         self.audio_card.grid_columnconfigure(0, weight=1)
         
@@ -218,7 +225,7 @@ class SettingsPage(ctk.CTkFrame):
         self.noise_red_switch.pack(anchor="w", padx=20, pady=(10, 10))
 
         # CARD 3: SENSITIVITY & VAD SETTINGS (Row 1, Column 0)
-        self.vad_card = ctk.CTkFrame(self, fg_color="#1E1E20", corner_radius=12)
+        self.vad_card = ctk.CTkFrame(self.scroll_container, fg_color="#1E1E20", corner_radius=12)
         self.vad_card.grid(row=1, column=0, columnspan=1, padx=15, pady=15, sticky="nsew")
         self.vad_card.grid_columnconfigure(0, weight=1)
         self.vad_card.grid_columnconfigure(1, weight=1)
@@ -314,7 +321,7 @@ class SettingsPage(ctk.CTkFrame):
         self.opacity_slider.grid(row=1, column=0, sticky="ew")
         
         # CARD 4: RESUME / PROFILE SETTINGS (Row 1, Column 1)
-        self.resume_card = ctk.CTkFrame(self, fg_color="#1E1E20", corner_radius=12)
+        self.resume_card = ctk.CTkFrame(self.scroll_container, fg_color="#1E1E20", corner_radius=12)
         self.resume_card.grid(row=1, column=1, padx=15, pady=15, sticky="nsew")
         self.resume_card.grid_columnconfigure(0, weight=1)
         
@@ -414,6 +421,13 @@ class SettingsPage(ctk.CTkFrame):
         else:
             self.gemini_frame.pack_forget()
             self.custom_frame.pack(fill="x", padx=20, pady=(0, 10))
+            
+        # Repack actions frame to keep it at the very bottom of the card
+        try:
+            self.key_actions.pack_forget()
+            self.key_actions.pack(fill="x", padx=20, pady=(10, 20))
+        except Exception:
+            pass
 
     def _save_settings(self, event=None):
         gemini_key = self.api_key_entry.get().strip()
