@@ -154,16 +154,14 @@ def create_coaching_card(parent, result, card_label=""):
 
     # Dynamic auto-wrap configuration on resize
     card._last_width = 0
+    card._resize_timer_id = None
 
-    def _on_card_configure(event):
-        card_width = event.width
-        if card_width == card._last_width:
+    def _update_wraplengths():
+        card._resize_timer_id = None
+        card_width = card.winfo_width()
+        if card_width < 10:
             return
-        card._last_width = card_width
-        
-        # Calculate text area width (with safety margin)
-        # Convert raw pixels to virtual pixels using the widget scaling factor,
-        # because event.width is raw pixels, but configure(wraplength=...) expects virtual pixels.
+            
         try:
             scaling = card._get_widget_scaling()
         except Exception:
@@ -180,6 +178,34 @@ def create_coaching_card(parent, result, card_label=""):
                 lbl.configure(wraplength=max(80, text_width - offset))
             except Exception:
                 pass
+
+    def _on_card_configure(event):
+        # Only handle resize events of the card itself, not children
+        if event.widget != card:
+            return
+            
+        card_width = event.width
+        
+        # If it's the first render, update immediately to prevent visible layout delay
+        if card._last_width == 0:
+            card._last_width = card_width
+            _update_wraplengths()
+            return
+            
+        # Skip updates for minor/jitter resizes
+        if abs(card_width - card._last_width) < 10:
+            return
+        card._last_width = card_width
+        
+        # Cancel previous scheduled update to debounce
+        if card._resize_timer_id is not None:
+            try:
+                card.after_cancel(card._resize_timer_id)
+            except Exception:
+                pass
+                
+        # Schedule the wrap recalculation after resizing stops (100ms)
+        card._resize_timer_id = card.after(100, _update_wraplengths)
 
     card.bind("<Configure>", _on_card_configure)
 

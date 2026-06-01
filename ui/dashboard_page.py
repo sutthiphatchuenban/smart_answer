@@ -16,7 +16,7 @@ class DashboardPage(ctk.CTkFrame):
         # Waveform state
         self.is_recording = False
         self.current_volume_rms = 0.0
-        self.waveform_data = [0.0] * 128
+        self.waveform_data = [0.0] * 64
         self.waveform_lock = threading.Lock()
         self.waveform_dirty = False
         
@@ -351,8 +351,10 @@ class DashboardPage(ctk.CTkFrame):
         
         if waveform_chunk:
             # We display waveform when system or mic audio is captured
+            # Downsample from 32 points to 16 points to match the 64-point canvas width
+            chunk_16 = waveform_chunk[::2]
             with self.waveform_lock:
-                self.waveform_data = self.waveform_data[len(waveform_chunk):] + waveform_chunk
+                self.waveform_data = self.waveform_data[len(chunk_16):] + chunk_16
                 self.waveform_dirty = True
                 
     def _draw_waveform(self):
@@ -397,6 +399,11 @@ class DashboardPage(ctk.CTkFrame):
                 )
                 
     def _volume_meter_loop(self):
+        # If the page is currently hidden (not mapped), pause updating to save resources
+        if not self.winfo_ismapped():
+            self.after(200, self._volume_meter_loop)
+            return
+
         should_draw = False
         if self.is_recording:
             with self.waveform_lock:

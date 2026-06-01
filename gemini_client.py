@@ -4,6 +4,7 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
 from typing import List, Optional
+from config import safe_print as print
 
 # Define the Pydantic schema for structured output
 class StarFramework(BaseModel):
@@ -260,6 +261,7 @@ class GeminiAnalyzer:
                     Please perform the following steps:
                     1. Review the transcribed question text. Correct any transcription errors, spelling mistakes, or grammatical errors.
                        Pay special attention to English technical terms that might be transcribed phonetically in Thai (e.g. "พอลูก" -> "for loop").
+                       - If the transcribed text contains a mixture of the interviewer's question and subsequent conversations, candidate responses, or interruptions (e.g. someone spoke over or interrupted), you MUST isolate and extract ONLY the interviewer's core question. Ignore the candidate's responses or general chatter.
                     
                     2. Check if this text is a valid question to analyze:
                        {filter_instruction}
@@ -360,6 +362,7 @@ class GeminiAnalyzer:
                 Important Guidelines:
                 1. Review the transcribed question text. Correct any transcription errors, spelling mistakes, or grammatical errors.
                    Pay special attention to English technical terms that might be transcribed phonetically in Thai (e.g. "พอลูก" -> "for loop").
+                   - If the transcribed text contains a mixture of the interviewer's question and subsequent conversations, candidate responses, or interruptions (e.g. someone spoke over or interrupted), you MUST isolate and extract ONLY the interviewer's core question. Ignore the candidate's responses or general chatter.
                 2. Check if this text is a valid question to analyze:
                    {filter_instruction}
                 3. If `is_interview_question` is true:

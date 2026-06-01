@@ -15,7 +15,7 @@ if hasattr(sys.stdout, 'reconfigure'):
         pass
 
 # Import core modules
-from config import ConfigManager
+from config import ConfigManager, safe_print as print
 from audio import AudioRecorder
 from transcriber import WhisperTranscriber  # Backed by Google Speech Recognition
 from gemini_client import GeminiAnalyzer

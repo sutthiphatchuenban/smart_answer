@@ -45,15 +45,14 @@ def test_whisper():
         audio_mono = audio.flatten()
         resampled = resample_audio(audio_mono, samplerate, 16000)
         
-        # Transcribe directly using the loaded model
-        segments, info = transcriber.model.transcribe(resampled, beam_size=5)
-        text = " ".join([seg.text for seg in segments]).strip()
+        # Transcribe directly using the Google Speech API wrapper
+        text, lang = transcriber._transcribe_audio_data(resampled)
         
         print("\n--- TRANSCRIPTION RESULT ---")
-        print(f"Detected Language: {info.language} (confidence: {info.language_probability:.2f})")
+        print(f"Detected Language: {lang}")
         print(f"Text: '{text}'")
         print("----------------------------")
-        print("Whisper offline test PASSED!")
+        print("Google Speech test PASSED!")
         
     except Exception as e:
         print(f"Error during recording/transcribing: {e}")

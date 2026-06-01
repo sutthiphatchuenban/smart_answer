@@ -52,12 +52,21 @@ def resample_audio(audio_data, orig_sr, target_sr=16000):
     """Resamples audio data from orig_sr to target_sr using scipy."""
     if orig_sr == target_sr:
         return audio_data
-    num_samples = int(len(audio_data) * target_sr / orig_sr)
+    
+    # Calculate rational ratio for resample_poly
+    import math
     try:
-        return scipy.signal.resample(audio_data, num_samples).astype(np.float32)
+        orig_sr_int = int(orig_sr)
+        target_sr_int = int(target_sr)
+        g = math.gcd(orig_sr_int, target_sr_int)
+        up = target_sr_int // g
+        down = orig_sr_int // g
+        
+        # resample_poly is much faster than FFT resample
+        return scipy.signal.resample_poly(audio_data, up, down).astype(np.float32)
     except Exception as e:
         # Fallback simple linear interpolation if scipy resample fails
-        print(f"Scipy resample failed: {e}. Using linear interpolation.")
+        num_samples = int(len(audio_data) * target_sr / orig_sr)
         x_orig = np.linspace(0, len(audio_data), len(audio_data))
         x_target = np.linspace(0, len(audio_data), num_samples)
         return np.interp(x_target, x_orig, audio_data).astype(np.float32)

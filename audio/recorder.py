@@ -3,6 +3,7 @@ import threading
 import time
 import numpy as np
 import sounddevice as sd
+from config import safe_print as print
 
 from .processing import (
     get_audio_devices,
@@ -47,6 +48,9 @@ class AudioRecorder:
         self.live_audio_busy = False
         self.live_audio_interval = 2.0
         self.live_audio_max_seconds = 4.0
+        
+        # Max speech duration limit (seconds) to force-complete a chunk when interrupted/over-talking
+        self.max_speech_duration = 12.0
         
         # Audio formatting
         self.target_samplerate = 16000
@@ -248,6 +252,20 @@ class AudioRecorder:
                                 self.current_recording.append(mono_data)
                                 silent_chunks_count = 0
                                 speech_chunks_count += 1
+                                
+                                # Max speech duration check (force split if speaking too long without pauses/interrupted)
+                                max_speech_chunks = int(self.max_speech_duration / chunk_duration)
+                                if speech_chunks_count >= max_speech_chunks:
+                                    print("Max speech duration reached. Force-completing chunk to analyze.")
+                                    chunks_to_submit = list(self.current_recording)
+                                    self.current_recording = []
+                                    speech_chunks_count = 0
+                                    silent_chunks_count = 0
+                                    threading.Thread(
+                                        target=self._submit_audio_async,
+                                        args=(chunks_to_submit, samplerate, max_speech_chunks),
+                                        daemon=True
+                                    ).start()
                             else:
                                 if has_speech:
                                     self.current_recording.append(mono_data)
@@ -493,6 +511,20 @@ class AudioRecorder:
                             self.current_recording.append(mono_data)
                             silent_chunks_count = 0
                             speech_chunks_count += 1
+                            
+                            # Max speech duration check (force split if speaking too long without pauses/interrupted)
+                            max_speech_chunks = int(self.max_speech_duration / chunk_duration)
+                            if speech_chunks_count >= max_speech_chunks:
+                                print("Max speech duration reached. Force-completing chunk to analyze.")
+                                chunks_to_submit = list(self.current_recording)
+                                self.current_recording = []
+                                speech_chunks_count = 0
+                                silent_chunks_count = 0
+                                threading.Thread(
+                                    target=self._submit_audio_async,
+                                    args=(chunks_to_submit, samplerate, max_speech_chunks),
+                                    daemon=True
+                                ).start()
                         else:
                             if has_speech:
                                 self.current_recording.append(mono_data)
@@ -603,6 +635,11 @@ class AudioRecorder:
                     live_audio = live_audio[-max_samples:]
 
                 if len(live_audio) >= int(samplerate * 0.5):
+                    # Check if audio has sufficient volume to be speech (skip if too quiet)
+                    live_rms = np.sqrt(np.mean(live_audio**2))
+                    if live_rms < max(0.002, self.silence_threshold * 0.5):
+                        return
+                        
                     live_resampled = resample_audio(live_audio, samplerate, self.target_samplerate)
                     max_val = np.max(np.abs(live_resampled))
                     if max_val > 0.001:

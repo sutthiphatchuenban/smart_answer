@@ -5,6 +5,7 @@ import io
 import numpy as np
 import scipy.io.wavfile as wavfile
 import speech_recognition as sr
+from config import safe_print as print
 
 class WhisperTranscriber:
     """
@@ -21,6 +22,10 @@ class WhisperTranscriber:
         self.running = False
         self.thread = None
         self.recognizer = sr.Recognizer()
+        
+        # Lock and flag to prevent stacking of live caption transcription threads
+        self.live_transcribe_busy = False
+        self.live_lock = threading.Lock()
         
         # Adjust recognizer thresholds for better responsiveness
         self.recognizer.dynamic_energy_threshold = False
@@ -145,14 +150,23 @@ class WhisperTranscriber:
         if not self.is_loaded:
             return
             
+        with self.live_lock:
+            if self.live_transcribe_busy:
+                return
+            self.live_transcribe_busy = True
+            
         def worker():
-            t0 = time.time()
-            text, lang = self._transcribe_audio_data(audio_data)
-            t1 = time.time()
-            if text:
-                print(f"[Transcriber Log] Live caption transcribed in {t1-t0:.2f}s: '{text}' (Language: {lang})")
-                callback(text, lang)
-            else:
-                print(f"[Transcriber Log] Live caption transcription empty/noise (took {t1-t0:.2f}s).")
+            try:
+                t0 = time.time()
+                text, lang = self._transcribe_audio_data(audio_data)
+                t1 = time.time()
+                if text:
+                    print(f"[Transcriber Log] Live caption transcribed in {t1-t0:.2f}s: '{text}' (Language: {lang})")
+                    callback(text, lang)
+                else:
+                    print(f"[Transcriber Log] Live caption transcription empty/noise (took {t1-t0:.2f}s).")
+            finally:
+                with self.live_lock:
+                    self.live_transcribe_busy = False
                 
         threading.Thread(target=worker, daemon=True).start()

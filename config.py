@@ -1,5 +1,13 @@
 import os
 import json
+import builtins
+import threading
+
+print_lock = threading.Lock()
+
+def safe_print(*args, **kwargs):
+    with print_lock:
+        builtins.print(*args, **kwargs)
 
 CONFIG_FILE = "config.json"
 

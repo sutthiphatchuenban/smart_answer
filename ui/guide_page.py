@@ -159,13 +159,48 @@ class GuidePage(ctk.CTkFrame):
         body_lbl.pack(fill="x", padx=24, pady=(0, 20))
         
         # Bind resize configure to enable responsive auto-wrap
-        def _on_resize(event):
+        card._last_width = 0
+        card._resize_timer_id = None
+        
+        def _update_wrap():
+            card._resize_timer_id = None
             try:
                 scaling = card._get_widget_scaling()
             except Exception:
                 scaling = 1.0
-            virtual_width = event.width / scaling
+            virtual_width = card.winfo_width() / scaling
             wrap_w = max(100, virtual_width - 48)
-            body_lbl.configure(wraplength=wrap_w)
+            try:
+                body_lbl.configure(wraplength=wrap_w)
+            except Exception:
+                pass
+
+        def _on_resize(event):
+            # Only handle configure events for the card frame itself, not children
+            if event.widget != card:
+                return
+                
+            card_width = event.width
+            
+            # If it's the first render, update immediately
+            if card._last_width == 0:
+                card._last_width = card_width
+                _update_wrap()
+                return
+                
+            # Skip minor/jitter resize updates
+            if abs(card_width - card._last_width) < 15:
+                return
+            card._last_width = card_width
+            
+            # Cancel previous scheduled update to debounce
+            if card._resize_timer_id is not None:
+                try:
+                    card.after_cancel(card._resize_timer_id)
+                except Exception:
+                    pass
+                    
+            # Schedule wrapping after 100ms pause in resizing
+            card._resize_timer_id = card.after(100, _update_wrap)
             
         card.bind("<Configure>", _on_resize)
