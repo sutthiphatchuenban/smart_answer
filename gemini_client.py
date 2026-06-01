@@ -404,7 +404,13 @@ class GeminiAnalyzer:
                     raise Exception(f"HTTP {response.status_code}: {response.text}")
                     
                 resp_json = response.json()
-                content = resp_json["choices"][0]["message"]["content"].strip()
+                message_obj = resp_json["choices"][0]["message"]
+                content = message_obj["content"].strip()
+                
+                # Log reasoning_content if present (e.g. for thinking/reasoning models)
+                reasoning = message_obj.get("reasoning_content")
+                if reasoning:
+                    print(f"\n[Custom AI Reasoning]:\n{reasoning}\n")
                 
                 # Parse JSON content, dealing with potential markdown backticks
                 if content.startswith("```json"):
